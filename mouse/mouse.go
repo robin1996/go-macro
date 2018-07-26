@@ -51,9 +51,14 @@ func notify(ctx context.Context, ch chan<- MouseMessage) {
 	const WH_MOUSE_LL = 14
 	var lResult hook.HHOOK
 	hookProcedure := func(code, wParam, lParam uint64) uintptr {
-		if (code >= 0) && (wParam == WM_LBUTTONDOWN) {
+		if (code >= 0) && ((wParam == WM_LBUTTONDOWN) || (wParam == WM_RBUTTONDOWN)) {
 			m := *(*MOUSEHOOKSTRUCT)(unsafe.Pointer(uintptr(lParam)))
-			mm := MouseMessage{LeftClick, m.POINT}
+			click := LeftClick
+			switch wParam {
+			case WM_RBUTTONDOWN:
+				click = RightClick
+			}
+			mm := MouseMessage{click, m.POINT}
 			ch <- mm
 		}
 		return uintptr(hook.CallNextHookEx(0, code, wParam, lParam))
