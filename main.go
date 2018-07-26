@@ -66,6 +66,8 @@ func main() {
 				signal.Notify(signalChan, os.Interrupt)
 				ctx, cancel := context.WithCancel(context.Background())
 				mouseChan := make(chan mouse.MouseMessage, 1)
+				stopChan := make(chan bool, 1)
+				//testChan := make(chan bool, 1)
 
 				go func() {
 					wg.Add(1)
@@ -80,13 +82,14 @@ func main() {
 					select {
 					case <-signalChan:
 						isInterrupted = true
+					case <-stopChan:
+						isInterrupted = true
 					case k := <-mouseChan:
 						fmt.Println(k.Button, k.POINT.X, k.POINT.Y)
 					}
 				}
 				wg.Wait()
 				fmt.Println("done")
-				return
 			}
 		}
 	}
