@@ -35,7 +35,7 @@ func main() {
 		case <-signalChan:
 			isInterrupted = true
 		case k := <-mouseChan:
-			fmt.Println(k.Button)
+			fmt.Println(k.Button, k.POINT.X, k.POINT.Y)
 		}
 	}
 	wg.Wait()
