@@ -28,13 +28,12 @@ type MSG struct {
 	hook.POINT
 }
 
-func main() {
+func hotKeyEvents(startStopChan chan bool, testChan chan bool) {
 	user32 := sys.MustLoadDLL("user32")
 	defer user32.Release()
 
 	regHotKey := user32.MustFindProc("RegisterHotKey")
 	peekMsg := user32.MustFindProc("PeekMessageW")
-	
 
 	hotKeys := map[int16]*HotKey {
 		1: &HotKey{1, 0, 0x78}, // F9 -- See https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
@@ -49,48 +48,67 @@ func main() {
 		}
 	}
 
-	fmt.Println("Press F9 to start!")
-
 	for {
 		var msg = &MSG{}
 		peekMsg.Call(uintptr(unsafe.Pointer(msg)), 0, 0, 0, 1)
 
-		if id := msg.WPARAM; id != 0 {
-			if id == 1 {
-				fmt.Println("start capturing mouse input")
+		switch id := msg.WPARAM; id {
+		case 1:
+			fmt.Println("Stop/Start")
+			startStopChan <- true
+			//return
+		case 2:
+			fmt.Println("Test")
+			//testChan <- true
+		}
+	}
+}
 
-				var isInterrupted bool
-				var wg sync.WaitGroup
+func main() {
+	startStopChan := make(chan bool, 1)
+	testChan := make(chan bool, 1)
 
-				signalChan := make(chan os.Signal, 1)
-				signal.Notify(signalChan, os.Interrupt)
-				ctx, cancel := context.WithCancel(context.Background())
-				mouseChan := make(chan mouse.MouseMessage, 1)
-				stopChan := make(chan bool, 1)
-				//testChan := make(chan bool, 1)
+	go hotKeyEvents(startStopChan, testChan)
 
-				go func() {
-					wg.Add(1)
-					mouse.Notify(ctx, mouseChan)
-					wg.Done()
-				}()
-				for {
-					if isInterrupted {
-						cancel()
-						break
-					}
-					select {
-					case <-signalChan:
-						isInterrupted = true
-					case <-stopChan:
-						isInterrupted = true
-					case k := <-mouseChan:
-						fmt.Println(k.Button, k.POINT.X, k.POINT.Y)
-					}
-				}
-				wg.Wait()
-				fmt.Println("done")
+	for {
+		var wg sync.WaitGroup
+		var isInterrupted bool
+
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, os.Interrupt)
+		ctx, cancel := context.WithCancel(context.Background())
+		mouseChan := make(chan mouse.MouseMessage, 1)
+
+
+		fmt.Println("Press F9 to start/stop recording, F10 to add a test.")
+
+		<-startStopChan
+
+		go func() {
+			wg.Add(1)
+			mouse.Notify(ctx, mouseChan)
+			wg.Done()
+		}()
+
+		fmt.Println("Starting recording...")
+
+		for {
+			if isInterrupted {
+				cancel()
+				break
+			}
+			select {
+			case <-signalChan:
+				isInterrupted = true
+			case <-startStopChan:
+				isInterrupted = true
+			case <-testChan:
+				fmt.Println("test placeholder")
+			case k := <-mouseChan:
+				fmt.Println(k.Button, k.POINT.X, k.POINT.Y)
 			}
 		}
+		wg.Wait()
+		fmt.Println("done")
 	}
 }
