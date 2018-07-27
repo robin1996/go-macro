@@ -29,6 +29,7 @@ type MSG struct {
 }
 
 func hotKeyEvents(startStopChan chan bool, testChan chan bool) {
+	recording := false
 	user32 := sys.MustLoadDLL("user32")
 	defer user32.Release()
 
@@ -54,18 +55,18 @@ func hotKeyEvents(startStopChan chan bool, testChan chan bool) {
 
 		switch id := msg.WPARAM; id {
 		case 1:
-			fmt.Println("Stop/Start")
 			startStopChan <- true
-			//return
+			recording = !recording
 		case 2:
-			fmt.Println("Test")
-			//testChan <- true
+			if recording {
+				testChan <- true
+			}
 		}
 	}
 }
 
 func main() {
-	startStopChan := make(chan bool, 1)
+	startStopChan := make(chan bool, 2)
 	testChan := make(chan bool, 1)
 
 	go hotKeyEvents(startStopChan, testChan)
@@ -78,7 +79,6 @@ func main() {
 		signal.Notify(signalChan, os.Interrupt)
 		ctx, cancel := context.WithCancel(context.Background())
 		mouseChan := make(chan mouse.MouseMessage, 1)
-
 
 		fmt.Println("Press F9 to start/stop recording, F10 to add a test.")
 
