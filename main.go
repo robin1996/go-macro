@@ -11,6 +11,7 @@ import (
 
 	"github.com/robin1996/go-macro/mouse"
 	"github.com/moutend/go-hook"
+	"github.com/go-vgo/robotgo"
 )
 
 type HotKey struct {
@@ -28,7 +29,29 @@ type MSG struct {
 	hook.POINT
 }
 
-func hotKeyEvents(startStopChan chan bool, testChan chan bool) {
+type TestMessage struct {
+	hook.POINT
+	Colour string
+}
+
+type Step struct {
+	Type int `yaml:"type"`
+	Point struct {
+		X int `yaml:"x"`
+		Y int `yaml:"y"`
+	}
+	Colour string `yaml:"colour"`
+	Duration string `yaml:"duration"`
+}
+
+const (
+	LeftClick = iota
+	RightClick
+	Test
+	Sleep
+)
+
+func hotKeyEvents(startStopChan chan bool, testChan chan TestMessage) {
 	recording := false
 	user32 := sys.MustLoadDLL("user32")
 	defer user32.Release()
@@ -59,7 +82,12 @@ func hotKeyEvents(startStopChan chan bool, testChan chan bool) {
 			recording = !recording
 		case 2:
 			if recording {
-				testChan <- true
+				x, y := robotgo.GetMousePos()
+				tmsg := TestMessage{
+					hook.POINT{int32(x), int32(y)},
+					robotgo.GetPixelColor(x, y),
+				}
+				testChan <- tmsg
 			}
 		}
 	}
@@ -67,7 +95,7 @@ func hotKeyEvents(startStopChan chan bool, testChan chan bool) {
 
 func main() {
 	startStopChan := make(chan bool, 2)
-	testChan := make(chan bool, 1)
+	testChan := make(chan TestMessage, 1)
 
 	go hotKeyEvents(startStopChan, testChan)
 
@@ -78,7 +106,7 @@ func main() {
 		signalChan := make(chan os.Signal, 1)
 		signal.Notify(signalChan, os.Interrupt)
 		ctx, cancel := context.WithCancel(context.Background())
-		mouseChan := make(chan mouse.MouseMessage, 1)
+		mouseChan := make(chan mouse.ActionMessage, 1)
 
 		fmt.Println("Press F9 to start/stop recording, F10 to add a test.")
 
@@ -102,10 +130,10 @@ func main() {
 				isInterrupted = true
 			case <-startStopChan:
 				isInterrupted = true
-			case <-testChan:
-				fmt.Println("test placeholder")
+			case l := <-testChan:
+				fmt.Println(l.Colour, l.POINT.X, l.POINT.Y)
 			case k := <-mouseChan:
-				fmt.Println(k.Button, k.POINT.X, k.POINT.Y)
+				fmt.Println(k.Action, k.POINT.X, k.POINT.Y)
 			}
 		}
 		wg.Wait()

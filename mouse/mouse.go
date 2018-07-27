@@ -35,12 +35,12 @@ type MOUSEHOOKSTRUCT struct {
 	DWExtraInfo uint32
 }
 
-type MouseMessage struct {
-	Button int
+type ActionMessage struct {
+	Action int
 	hook.POINT
 }
 
-func notify(ctx context.Context, ch chan<- MouseMessage) {
+func notify(ctx context.Context, ch chan<- ActionMessage) {
 	if ctx == nil {
 		panic("hook/mouse: nil context")
 	}
@@ -58,7 +58,7 @@ func notify(ctx context.Context, ch chan<- MouseMessage) {
 			case WM_RBUTTONDOWN:
 				click = RightClick
 			}
-			mm := MouseMessage{click, m.POINT}
+			mm := ActionMessage{click, m.POINT}
 			ch <- mm
 		}
 		return uintptr(hook.CallNextHookEx(0, code, wParam, lParam))
@@ -86,6 +86,6 @@ func notify(ctx context.Context, ch chan<- MouseMessage) {
 }
 
 // Notify causes package mouse to relay all keyboard events to ch.
-func Notify(ctx context.Context, ch chan<- MouseMessage) {
+func Notify(ctx context.Context, ch chan<- ActionMessage) {
 	notify(ctx, ch)
 }
