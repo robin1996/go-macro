@@ -7,17 +7,18 @@ import (
 	"os/signal"
 	"sync"
 	"unsafe"
+
 	sys "golang.org/x/sys/windows"
 
-	"github.com/robin1996/go-macro/mouse"
-	"github.com/moutend/go-hook"
 	"github.com/go-vgo/robotgo"
+	"github.com/moutend/go-hook"
+	"github.com/robin1996/go-macro/mouse"
 )
 
 type HotKey struct {
-	Id int
+	Id        int
 	Modifiers int
-	KeyCode int
+	KeyCode   int
 }
 
 type MSG struct {
@@ -35,12 +36,12 @@ type TestMessage struct {
 }
 
 type Step struct {
-	Type int `yaml:"type"`
+	Type  int `yaml:"type"`
 	Point struct {
 		X int `yaml:"x"`
 		Y int `yaml:"y"`
 	}
-	Colour string `yaml:"colour"`
+	Colour   string `yaml:"colour"`
 	Duration string `yaml:"duration"`
 }
 
@@ -59,7 +60,7 @@ func hotKeyEvents(startStopChan chan bool, testChan chan TestMessage) {
 	regHotKey := user32.MustFindProc("RegisterHotKey")
 	peekMsg := user32.MustFindProc("PeekMessageW")
 
-	hotKeys := map[int16]*HotKey {
+	hotKeys := map[int16]*HotKey{
 		1: &HotKey{1, 0, 0x78}, // F9 -- See https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
 		2: &HotKey{2, 0, 0x79}, // F10
 	}
