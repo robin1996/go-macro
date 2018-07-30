@@ -114,7 +114,7 @@ func main() {
 				isInterrupted = true
 			case l := <-testChan:
 				fmt.Println(l.Colour, l.POINT.X, l.POINT.Y)
-				step := macrofile.Step{3, macrofile.Point{int(l.POINT.X), int(l.POINT.Y)}, l.Colour, time.Since(startTime)}
+				step := macrofile.Step{macrofile.Test, macrofile.Point{int(l.POINT.X), int(l.POINT.Y)}, l.Colour, time.Since(startTime)}
 				steps = append(steps, step)
 			case k := <-mouseChan:
 				fmt.Println(k.Action, k.POINT.X, k.POINT.Y)
