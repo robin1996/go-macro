@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"time"
 	"unsafe"
 
 	sys "golang.org/x/sys/windows"
@@ -43,17 +44,16 @@ type Point struct {
 }
 
 type Step struct {
-	Type     int    `yaml:"type"`
-	Pos      Point  `yaml:"pos"`
-	Colour   string `yaml:"colour"`
-	Duration int64  `yaml:"duration"`
+	Type     int           `yaml:"type"`
+	Pos      Point         `yaml:"pos"`
+	Colour   string        `yaml:"colour"`
+	Duration time.Duration `yaml:"duration"`
 }
 
 const (
 	LeftClick = iota
 	RightClick
 	Test
-	Sleep
 )
 
 const macroFile = "C:\\Users\\robdo\\Desktop\\macro.yaml"
@@ -141,6 +141,7 @@ func main() {
 		fmt.Println("Starting recording...")
 
 		for {
+			startTime := time.Now()
 			if isInterrupted {
 				cancel()
 				break
@@ -152,11 +153,11 @@ func main() {
 				isInterrupted = true
 			case l := <-testChan:
 				fmt.Println(l.Colour, l.POINT.X, l.POINT.Y)
-				step := Step{3, Point{int(l.POINT.X), int(l.POINT.Y)}, l.Colour, 0}
+				step := Step{3, Point{int(l.POINT.X), int(l.POINT.Y)}, l.Colour, time.Since(startTime)}
 				steps = append(steps, step)
 			case k := <-mouseChan:
 				fmt.Println(k.Action, k.POINT.X, k.POINT.Y)
-				step := Step{k.Action, Point{int(k.POINT.X), int(k.POINT.Y)}, "", 0}
+				step := Step{k.Action, Point{int(k.POINT.X), int(k.POINT.Y)}, "", time.Since(startTime)}
 				steps = append(steps, step)
 			}
 		}
