@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"sync"
@@ -13,6 +14,7 @@ import (
 	"github.com/go-vgo/robotgo"
 	"github.com/moutend/go-hook"
 	"github.com/robin1996/go-macro/mouse"
+	"gopkg.in/yaml.v2"
 )
 
 type HotKey struct {
@@ -35,14 +37,16 @@ type TestMessage struct {
 	Colour string
 }
 
+type Point struct {
+	X int `yaml:"x"`
+	Y int `yaml:"y"`
+}
+
 type Step struct {
-	Type  int `yaml:"type"`
-	Point struct {
-		X int `yaml:"x"`
-		Y int `yaml:"y"`
-	}
+	Type     int    `yaml:"type"`
+	Pos      Point  `yaml:"pos"`
 	Colour   string `yaml:"colour"`
-	Duration string `yaml:"duration"`
+	Duration int64  `yaml:"duration"`
 }
 
 const (
@@ -51,6 +55,20 @@ const (
 	Test
 	Sleep
 )
+
+const macroFile = "C:\\Users\\robdo\\Desktop\\macro.yaml"
+
+func writeMacro(recording []Step) {
+	content, err := yaml.Marshal(recording)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ioutil.WriteFile(macroFile, content, 0644)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func hotKeyEvents(startStopChan chan bool, testChan chan TestMessage) {
 	recording := false
@@ -103,6 +121,7 @@ func main() {
 	for {
 		var wg sync.WaitGroup
 		var isInterrupted bool
+		var steps []Step
 
 		signalChan := make(chan os.Signal, 1)
 		signal.Notify(signalChan, os.Interrupt)
@@ -133,11 +152,16 @@ func main() {
 				isInterrupted = true
 			case l := <-testChan:
 				fmt.Println(l.Colour, l.POINT.X, l.POINT.Y)
+				step := Step{3, Point{int(l.POINT.X), int(l.POINT.Y)}, l.Colour, 0}
+				steps = append(steps, step)
 			case k := <-mouseChan:
 				fmt.Println(k.Action, k.POINT.X, k.POINT.Y)
+				step := Step{k.Action, Point{int(k.POINT.X), int(k.POINT.Y)}, "", 0}
+				steps = append(steps, step)
 			}
 		}
 		wg.Wait()
+		writeMacro(steps)
 		fmt.Println("done")
 	}
 }
