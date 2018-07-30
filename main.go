@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"os/signal"
 	"sync"
 	"time"
 	"unsafe"
@@ -123,8 +121,6 @@ func main() {
 		var isInterrupted bool
 		var steps []Step
 
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt)
 		ctx, cancel := context.WithCancel(context.Background())
 		mouseChan := make(chan mouse.ActionMessage, 1)
 
@@ -147,8 +143,6 @@ func main() {
 				break
 			}
 			select {
-			case <-signalChan:
-				isInterrupted = true
 			case <-startStopChan:
 				isInterrupted = true
 			case l := <-testChan:
