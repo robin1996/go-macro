@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"time"
 )
@@ -18,5 +19,12 @@ func playStartSeq() {
 }
 
 func main() {
-	playStartSeq()
+	// Flag Setup
+	cdPtr := flag.Bool("ShowCountDown", true, "Set this to false to skip playing a count down before starting the macro!\n'gmp.exe -ShowCountDown=flase'")
+	flag.Parse()
+
+	// Play count down
+	if *cdPtr {
+		playStartSeq()
+	}
 }
