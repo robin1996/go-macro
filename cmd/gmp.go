@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"time"
+
+	"github.com/robin1996/go-macro/macrofile"
 )
 
 func playStartSeq() {
@@ -22,6 +24,8 @@ func main() {
 	// Flag Setup
 	cdPtr := flag.Bool("ShowCountDown", true, "Set this to false to skip playing a count down before starting the macro!\n'gmp.exe -ShowCountDown=flase'")
 	flag.Parse()
+
+	// steps := macrofile.ReadMacro()
 
 	// Play count down
 	if *cdPtr {

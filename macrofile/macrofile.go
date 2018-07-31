@@ -38,3 +38,19 @@ func WriteMacro(recording []Step) {
 		panic(err)
 	}
 }
+
+func ReadMacro() []Step {
+	steps := []Step{}
+
+	file, err := ioutil.ReadFile(macroFile)
+	if err != nil {
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(file, &steps)
+	if err != nil {
+		panic(err)
+	}
+
+	return steps
+}
