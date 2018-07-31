@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/robin1996/go-macro/macrofile"
+	"github.com/go-vgo/robotgo"
 )
 
 func playStartSeq() {
@@ -24,10 +25,18 @@ func playAction(step macrofile.Step) {
 	switch step.Type {
 	case macrofile.LeftClick:
 		fmt.Println("Left click!!")
+		robotgo.MoveClick(step.Pos.X, step.Pos.Y, "left")
 	case macrofile.RightClick:
 		fmt.Println("Right click!!")
+		robotgo.MoveClick(step.Pos.X, step.Pos.Y, "right")
 	case macrofile.Test:
 		fmt.Println("Test!!")
+		colour := robotgo.GetPixelColor(step.Pos.X, step.Pos.Y)
+		if colour == step.Colour {
+			fmt.Println("-- PASS --")
+		} else {
+			fmt.Println("-- FAIL --")
+		}
 	}
 	time.Sleep(step.Duration)
 }
