@@ -29,6 +29,7 @@ func playAction(step macrofile.Step) {
 	case macrofile.Test:
 		fmt.Println("Test!!")
 	}
+	time.Sleep(step.Duration)
 }
 
 func main() {
