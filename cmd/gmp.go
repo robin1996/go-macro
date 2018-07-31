@@ -20,15 +20,30 @@ func playStartSeq() {
 	fmt.Println("GO!")
 }
 
+func playAction(step macrofile.Step) {
+	switch step.Type {
+	case macrofile.LeftClick:
+		fmt.Println("Left click!!")
+	case macrofile.RightClick:
+		fmt.Println("Right click!!")
+	case macrofile.Test:
+		fmt.Println("Test!!")
+	}
+}
+
 func main() {
 	// Flag Setup
 	cdPtr := flag.Bool("ShowCountDown", true, "Set this to false to skip playing a count down before starting the macro!\n'gmp.exe -ShowCountDown=flase'")
 	flag.Parse()
 
-	// steps := macrofile.ReadMacro()
+	steps := macrofile.ReadMacro()
 
 	// Play count down
 	if *cdPtr {
 		playStartSeq()
+	}
+
+	for _, step := range steps {
+		playAction(step)
 	}
 }
